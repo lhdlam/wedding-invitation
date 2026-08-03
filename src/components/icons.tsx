@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 /* Ornaments drawn for the printed-suite identity: tiny paired hearts (the
    doodle on the envelope back), hairline rules, crimson accents. */
 
-/** Heart outline path in a 20×18 box, shared by the doodle and the rain. */
-const HEART_PATH =
+/** Heart outline path in a 20×18 box, shared by the doodle, rain and burst. */
+export const HEART_PATH =
   "M10 17 C 4.2 12.2, 0.6 8.7, 0.6 5.4 C 0.6 2.6, 2.8 0.6, 5.4 0.6 C 7.2 0.6, 8.9 1.5, 10 3 C 11.1 1.5, 12.8 0.6, 14.6 0.6 C 17.2 0.6, 19.4 2.6, 19.4 5.4 C 19.4 8.7, 15.8 12.2, 10 17 Z";
 
 /** The paired-hearts doodle from the envelope back: one outline, one filled. */

@@ -2,21 +2,75 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { HEART_PATH } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
-/* The flip + unmount timings from the spec (1.1s flip, 0.3s seal fade). */
-const FLIP_MS = 1100;
-const UNMOUNT_MS = 1250;
+/* Opening sequence, all delays measured from the seal click:
+   seal breaks + hearts burst → the triangular flap swings up → the card
+   slides out of the envelope → the whole overlay dissolves into the page. */
+const FLAP_DELAY_MS = 350;
+const FLAP_MS = 800;
+/* Past ~55% of the swing the flap has passed vertical, so it drops behind
+   the card for the rest of the sequence. */
+const FLAP_BEHIND_MS = FLAP_DELAY_MS + Math.round(FLAP_MS * 0.55);
+const CARD_DELAY_MS = 1200;
+const CARD_MS = 1000;
+const FADE_DELAY_MS = 2350;
+const FADE_MS = 700;
+const UNMOUNT_MS = FADE_DELAY_MS + FADE_MS + 100;
+const BURST_COUNT = 14;
+
+interface BurstHeart {
+  /** Flight vector, in px. */
+  dx: number;
+  dy: number;
+  /** Final rotation, in degrees. */
+  rot: number;
+  size: number;
+  delayMs: number;
+  color: string;
+}
+
+/**
+ * Built inside the click handler — never during render — so the randomness
+ * cannot cause a hydration mismatch.
+ */
+function buildBurst(): BurstHeart[] {
+  return Array.from({ length: BURST_COUNT }, (_, i) => {
+    const angle =
+      (i / BURST_COUNT) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
+    const distance = 70 + Math.random() * 90;
+    return {
+      dx: Math.cos(angle) * distance,
+      dy: Math.sin(angle) * distance - 30,
+      rot: (Math.random() - 0.5) * 240,
+      size: 9 + Math.random() * 9,
+      delayMs: Math.random() * 120,
+      color: Math.random() < 0.6 ? "#a2262f" : "#cf7d84",
+    };
+  });
+}
 
 const COVER_STYLES = `
 @keyframes cover-seal-breathe {
-  0%, 100% { transform: scale(1) rotate(42deg); }
-  50% { transform: scale(1.06) rotate(46deg); }
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.07); }
 }
 
 @keyframes cover-cursor-tap {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-6px) scale(1.08); }
+}
+
+@keyframes cover-envelope-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes cover-heart-burst {
+  0% { transform: translate(0, 0) scale(0.3) rotate(0deg); opacity: 0; }
+  12% { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1) rotate(var(--rot)); opacity: 0; }
 }
 
 .cover-seal-breathe {
@@ -31,26 +85,45 @@ const COVER_STYLES = `
   will-change: transform;
 }
 
+.cover-envelope-float {
+  animation: cover-envelope-float 5s ease-in-out infinite;
+}
+
+.cover-heart-burst {
+  animation: cover-heart-burst 1.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cover-seal-breathe,
-  .cover-cursor-tap {
+  .cover-cursor-tap,
+  .cover-envelope-float,
+  .cover-heart-burst {
     animation: none;
   }
 }
 `;
 
 export interface CoverOverlayProps {
-  /** Name rendered on the invitation flap. Default placeholder: "Bạn". */
+  /** Name rendered on the envelope pocket. Default placeholder: "Bạn". */
   guestName: string;
-  /** Short date on the envelope front, e.g. "19.09.26". */
+  /** Short date on the sliding card, e.g. "19.09.26". */
   dateShort: string;
   /** Fired the moment the wax seal is clicked, so the page can unlock scroll + start audio. */
   onOpen: () => void;
 }
 
+/**
+ * Opening cover: a miniature pearl envelope floating over the page. Clicking
+ * the wax seal breaks it with a heart burst, the triangular flap swings open,
+ * the "Save our date" card slides out, and the whole scene dissolves into
+ * the invitation.
+ */
 export function CoverOverlay({ guestName, dateShort, onOpen }: CoverOverlayProps) {
   const [opening, setOpening] = useState(false);
+  const [flapBehind, setFlapBehind] = useState(false);
   const [gone, setGone] = useState(false);
+  const [burst, setBurst] = useState<BurstHeart[]>([]);
 
   const handleOpen = useCallback(() => {
     if (opening) return;
@@ -65,13 +138,21 @@ export function CoverOverlay({ guestName, dateShort, onOpen }: CoverOverlayProps
       return;
     }
 
+    setBurst(buildBurst());
     setOpening(true);
   }, [onOpen, opening]);
 
   useEffect(() => {
     if (!opening) return;
-    const timer = window.setTimeout(() => setGone(true), UNMOUNT_MS);
-    return () => window.clearTimeout(timer);
+    const behindTimer = window.setTimeout(
+      () => setFlapBehind(true),
+      FLAP_BEHIND_MS,
+    );
+    const goneTimer = window.setTimeout(() => setGone(true), UNMOUNT_MS);
+    return () => {
+      window.clearTimeout(behindTimer);
+      window.clearTimeout(goneTimer);
+    };
   }, [opening]);
 
   if (gone) return null;
@@ -79,91 +160,151 @@ export function CoverOverlay({ guestName, dateShort, onOpen }: CoverOverlayProps
   return (
     <div className="pointer-events-none fixed inset-0 z-[200] flex justify-center">
       <style>{COVER_STYLES}</style>
-      <div className="pointer-events-auto relative h-[100dvh] w-full max-w-[480px]">
-        <div className="absolute inset-0 z-[100] isolate">
+      <div
+        className="pointer-events-auto relative h-[100dvh] w-full max-w-[480px] isolate bg-gradient-to-b from-[#fdfcfa] via-[#faf8f4] to-[#f2efe9]"
+        style={{
+          opacity: opening ? 0 : 1,
+          transform: opening ? "scale(1.04)" : "scale(1)",
+          transition: `opacity ${FADE_MS}ms ease ${FADE_DELAY_MS}ms, transform ${FADE_MS}ms ease ${FADE_DELAY_MS}ms`,
+        }}
+      >
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          {/* ENVELOPE */}
           <div
-            className="absolute inset-0 z-0 flex w-full"
-            aria-hidden="true"
-            style={{ perspective: "1600px" }}
+            className={cn("relative", !opening && "cover-envelope-float")}
+            style={{ perspective: "900px" }}
           >
-            {/* LEFT FLAP — pearl-white paper, like the printed envelope front */}
-            <div
-              className="relative z-0 h-full min-h-0 flex-[8] origin-left bg-gradient-to-br from-white via-[#fbfaf7] to-[#efece6] shadow-[inset_-10px_0_24px_rgba(0,0,0,0.06)] border-r border-[#e2ded7] pt-14"
-              style={{
-                transform: opening ? "rotateY(-170deg)" : "rotateY(0deg)",
-                transition: `transform ${FLIP_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`,
-                backfaceVisibility: "hidden",
-              }}
-            >
-              <p className="font-silenter text-[44px] text-wine text-center leading-none px-2">
-                Save our date
-              </p>
-              <p className="font-lora text-[34px] text-foreground text-center tracking-[4px] mt-4">
-                {dateShort}
-              </p>
-              <p className="font-lora text-[13px] text-wine text-center uppercase tracking-[3px] mt-2">
-                Đăng Lâm &amp; Hoài Thương
-              </p>
-              <p className="font-lora text-[15px] text-foreground/80 uppercase tracking-[2px] mt-10 text-center">
-                Trân trọng kính mời:
-              </p>
-              <div className="mt-4 ml-[20px] mr-[20px]">
-                <p className="font-anisa italic text-[44px] text-wine text-center leading-[34px] mb-2 relative">
-                  {guestName}
-                </p>
-                <p className="border-t border-foreground/50 w-[200px] mx-auto" />
-              </div>
-            </div>
+            <div className="relative h-[248px] w-[330px]">
+              {/* back panel */}
+              <div className="absolute inset-0 z-[10] rounded-[6px] border border-[#ddd8d0] bg-gradient-to-b from-[#f6f3ee] to-[#eeebe4]" />
 
-            {/* RIGHT FLAP */}
-            <div
-              className="relative z-0 h-full min-h-0 flex-[4] origin-right bg-gradient-to-bl from-[#fcfbf9] via-[#f3f1ec] to-[#e6e2da] shadow-[inset_12px_0_32px_rgba(0,0,0,0.07)]"
-              style={{
-                transform: opening ? "rotateY(170deg)" : "rotateY(0deg)",
-                transition: `transform ${FLIP_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`,
-                backfaceVisibility: "hidden",
-              }}
-            />
+              {/* CARD — slides up and out */}
+              <div
+                className="absolute left-1/2 top-[12px] z-[20] h-[196px] w-[292px] border border-[#e2ded7] bg-white px-4 pt-6 text-center shadow-card"
+                style={{
+                  transform: `translate(-50%, ${opening ? "-236px" : "0px"})`,
+                  transition: `transform ${CARD_MS}ms cubic-bezier(0.16, 1, 0.3, 1) ${CARD_DELAY_MS}ms`,
+                }}
+              >
+                <p className="font-silenter text-[34px] leading-none text-wine">
+                  Save our date
+                </p>
+                <p className="font-lora text-[24px] tracking-[4px] text-foreground mt-3">
+                  {dateShort}
+                </p>
+                <p className="font-lora text-[11px] uppercase tracking-[3px] text-wine mt-2">
+                  Đăng Lâm &amp; Hoài Thương
+                </p>
+                <svg
+                  viewBox="0 0 20 18"
+                  width="14"
+                  height="12.6"
+                  className="mx-auto mt-3"
+                  aria-hidden="true"
+                >
+                  <path d={HEART_PATH} fill="#a2262f" />
+                </svg>
+              </div>
+
+              {/* front pocket */}
+              <div className="absolute inset-0 z-[30] rounded-[6px] border border-[#ddd8d0] bg-gradient-to-b from-[#fdfcfa] to-[#f3f0ea] shadow-[inset_0_-14px_24px_rgba(0,0,0,0.05)]">
+                <div className="absolute inset-x-0 bottom-[14px] text-center">
+                  <p className="font-lora text-[12px] uppercase tracking-[3px] text-foreground/70">
+                    Thân mời:
+                  </p>
+                  <p className="font-anisa italic text-[32px] leading-[26px] text-wine mt-2">
+                    {guestName}
+                  </p>
+                  <p className="mx-auto mt-2 w-[150px] border-t border-foreground/40" />
+                </div>
+              </div>
+
+              {/* triangular flap */}
+              <div
+                className="absolute inset-x-0 top-0 h-[122px] border-t border-[#ddd8d0] bg-gradient-to-b from-[#faf8f4] to-[#e9e5dd] shadow-sm"
+                style={{
+                  zIndex: flapBehind ? 15 : 40,
+                  clipPath: "polygon(0 0, 100% 0, 50% 100%)",
+                  transformOrigin: "top center",
+                  transform: opening ? "rotateX(-180deg)" : "rotateX(0deg)",
+                  transition: `transform ${FLAP_MS}ms cubic-bezier(0.45, 0, 0.2, 1) ${FLAP_DELAY_MS}ms`,
+                }}
+              />
+
+              {/* HEART BURST — anchored at the seal, above everything */}
+              {burst.length > 0 ? (
+                <div
+                  className="pointer-events-none absolute left-1/2 top-[116px] z-[60] h-0 w-0"
+                  aria-hidden="true"
+                >
+                  {burst.map((heart, index) => (
+                    <svg
+                      key={index}
+                      viewBox="0 0 20 18"
+                      width={heart.size}
+                      height={(heart.size * 18) / 20}
+                      className="cover-heart-burst absolute"
+                      style={
+                        {
+                          "--dx": `${heart.dx}px`,
+                          "--dy": `${heart.dy}px`,
+                          "--rot": `${heart.rot}deg`,
+                          animationDelay: `${heart.delayMs}ms`,
+                        } as React.CSSProperties
+                      }
+                    >
+                      <path d={HEART_PATH} fill={heart.color} />
+                    </svg>
+                  ))}
+                </div>
+              ) : null}
+
+              {/* WAX SEAL — on the flap tip */}
+              <button
+                type="button"
+                onClick={handleOpen}
+                aria-label="Mở thiệp"
+                className={cn(
+                  "absolute left-1/2 top-[116px] z-[50] -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-[opacity,scale] duration-500",
+                  opening && "pointer-events-none opacity-0 scale-125",
+                )}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/wax-seal-red.webp"
+                  alt=""
+                  className="cover-seal-breathe w-[86px] object-contain drop-shadow-md"
+                />
+              </button>
+
+              {/* tap cursor hint */}
+              <button
+                type="button"
+                onClick={handleOpen}
+                aria-label="Mở thiệp"
+                className={cn(
+                  "absolute left-[58%] top-[138px] z-[50] cursor-pointer opacity-80 transition-opacity duration-300",
+                  opening && "pointer-events-none opacity-0",
+                )}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/cursor.webp"
+                  alt=""
+                  className="cover-cursor-tap w-[64px] object-contain"
+                />
+              </button>
+            </div>
           </div>
 
-          {/* SEAL CLUSTER */}
-          <div
+          <p
             className={cn(
-              "absolute left-[65%] top-1/2 z-10 h-[240px] w-[240px] -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300",
-              opening && "pointer-events-none opacity-0",
+              "mt-24 font-lora text-[12px] uppercase tracking-[3px] text-foreground/55 transition-opacity duration-300",
+              opening && "opacity-0",
             )}
           >
-            {/* No -translate-*-1/2 here: an inline `transform` from the original
-                site's framer-motion overrides the Tailwind translate utilities,
-                so the seal renders 50px down-right of where the classes alone
-                would place it. Matched deliberately. */}
-            <button
-              type="button"
-              onClick={handleOpen}
-              className="absolute left-[33%] top-[33%] z-10 cursor-pointer"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/images/wax-seal-red.webp"
-                alt="Open invitation"
-                className="cover-seal-breathe w-[100px] object-contain drop-shadow-md"
-              />
-            </button>
-            {/* Same as the seal: the target's inline `transform: none` from
-                framer-motion cancels the translate utilities here too. */}
-            <button
-              type="button"
-              onClick={handleOpen}
-              className="absolute left-[48%] top-[43%] z-10 cursor-pointer opacity-80"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/images/cursor.webp"
-                alt="Open invitation"
-                className="cover-cursor-tap w-[80px] object-contain"
-              />
-            </button>
-          </div>
+            Chạm vào dấu sáp để mở thiệp
+          </p>
         </div>
       </div>
     </div>

@@ -38,6 +38,10 @@ interface InvitationPageProps {
  */
 export function InvitationPage({ content }: InvitationPageProps) {
   const [opened, setOpened] = useState(false);
+  /* The overlay must stay mounted while its flip animation plays (it nulls
+     itself when done) — unmounting on `opened` would cut the effect short.
+     `coverSkipped` unmounts it only for the ?open=1 preview path. */
+  const [coverSkipped, setCoverSkipped] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [photo, setPhoto] = useState<LightboxPhoto | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -47,7 +51,10 @@ export function InvitationPage({ content }: InvitationPageProps) {
      paint still agree. */
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has("open")) return;
-    const id = requestAnimationFrame(() => setOpened(true));
+    const id = requestAnimationFrame(() => {
+      setOpened(true);
+      setCoverSkipped(true);
+    });
     return () => cancelAnimationFrame(id);
   }, []);
 
@@ -65,6 +72,10 @@ export function InvitationPage({ content }: InvitationPageProps) {
   /* Playback must start inside the click gesture or autoplay policy blocks it. */
   const handleOpen = useCallback(() => {
     setOpened(true);
+    /* Instant, not smooth: the page must already sit at the hero when the
+       flaps swing open (a restored scroll position could linger behind the
+       envelope). */
+    window.scrollTo({ top: 0, behavior: "auto" });
     const audio = audioRef.current;
     if (!audio) return;
     audio
@@ -130,7 +141,7 @@ export function InvitationPage({ content }: InvitationPageProps) {
 
       <PhotoLightbox photo={photo} onClose={handleCloseLightbox} />
 
-      {!opened && (
+      {!coverSkipped && (
         <CoverOverlay
           guestName={GUEST_NAME}
           dateShort={content.dateLabel.replace(".2026", ".26")}
