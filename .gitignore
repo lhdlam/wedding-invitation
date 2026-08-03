@@ -47,3 +47,6 @@ next-env.d.ts
 
 # Local temp files
 temp/
+
+# Ảnh gốc chưa nén (giữ ngoài repo)
+photos-source/
