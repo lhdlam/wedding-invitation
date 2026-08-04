@@ -13,10 +13,15 @@ const FLAP_MS = 800;
 /* Past ~55% of the swing the flap has passed vertical, so it drops behind
    the card for the rest of the sequence. */
 const FLAP_BEHIND_MS = FLAP_DELAY_MS + Math.round(FLAP_MS * 0.55);
+/* The card's three-act journey (one keyframe animation): slide up out of the
+   envelope → glide back to the centre of the screen → zoom up and dissolve. */
 const CARD_DELAY_MS = 1200;
-const CARD_MS = 1000;
-const FADE_DELAY_MS = 2350;
-const FADE_MS = 700;
+const CARD_JOURNEY_MS = 3000;
+/* The envelope dissolves while the card hovers at the top of its arc, so the
+   card returns to an empty centre instead of sliding back behind the pocket. */
+const ENVELOPE_FADE_AT_MS = CARD_DELAY_MS + 1100;
+const FADE_DELAY_MS = CARD_DELAY_MS + CARD_JOURNEY_MS - 500;
+const FADE_MS = 600;
 const UNMOUNT_MS = FADE_DELAY_MS + FADE_MS + 100;
 const BURST_COUNT = 14;
 
@@ -73,6 +78,15 @@ const COVER_STYLES = `
   100% { transform: translate(var(--dx), var(--dy)) scale(1) rotate(var(--rot)); opacity: 0; }
 }
 
+@keyframes cover-card-journey {
+  0% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+  32% { transform: translate(-50%, -238px) scale(1); opacity: 1; }
+  42% { transform: translate(-50%, -238px) scale(1.02); opacity: 1; }
+  64% { transform: translate(-50%, 14px) scale(1.06); opacity: 1; }
+  76% { opacity: 1; }
+  100% { transform: translate(-50%, 30px) scale(1.9); opacity: 0; }
+}
+
 .cover-seal-breathe {
   animation: cover-seal-breathe 2.5s ease-in-out infinite;
   transform-origin: center;
@@ -94,11 +108,17 @@ const COVER_STYLES = `
   will-change: transform, opacity;
 }
 
+.cover-card-journey {
+  animation: cover-card-journey 3s cubic-bezier(0.45, 0, 0.25, 1) both;
+  will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cover-seal-breathe,
   .cover-cursor-tap,
   .cover-envelope-float,
-  .cover-heart-burst {
+  .cover-heart-burst,
+  .cover-card-journey {
     animation: none;
   }
 }
@@ -122,6 +142,7 @@ export interface CoverOverlayProps {
 export function CoverOverlay({ guestName, dateShort, onOpen }: CoverOverlayProps) {
   const [opening, setOpening] = useState(false);
   const [flapBehind, setFlapBehind] = useState(false);
+  const [envelopeGone, setEnvelopeGone] = useState(false);
   const [gone, setGone] = useState(false);
   const [burst, setBurst] = useState<BurstHeart[]>([]);
 
@@ -148,9 +169,14 @@ export function CoverOverlay({ guestName, dateShort, onOpen }: CoverOverlayProps
       () => setFlapBehind(true),
       FLAP_BEHIND_MS,
     );
+    const envelopeTimer = window.setTimeout(
+      () => setEnvelopeGone(true),
+      ENVELOPE_FADE_AT_MS,
+    );
     const goneTimer = window.setTimeout(() => setGone(true), UNMOUNT_MS);
     return () => {
       window.clearTimeout(behindTimer);
+      window.clearTimeout(envelopeTimer);
       window.clearTimeout(goneTimer);
     };
   }, [opening]);
@@ -176,14 +202,23 @@ export function CoverOverlay({ guestName, dateShort, onOpen }: CoverOverlayProps
           >
             <div className="relative h-[248px] w-[330px]">
               {/* back panel */}
-              <div className="absolute inset-0 z-[10] rounded-[6px] border border-[#ddd8d0] bg-gradient-to-b from-[#f6f3ee] to-[#eeebe4]" />
-
-              {/* CARD — slides up and out */}
               <div
-                className="absolute left-1/2 top-[12px] z-[20] h-[196px] w-[292px] border border-[#e2ded7] bg-white px-4 pt-6 text-center shadow-card"
+                className={cn(
+                  "absolute inset-0 z-[10] rounded-[6px] border border-[#ddd8d0] bg-gradient-to-b from-[#f6f3ee] to-[#eeebe4] transition-opacity duration-500",
+                  envelopeGone && "opacity-0",
+                )}
+              />
+
+              {/* CARD — slides out, glides back to centre, zooms and dissolves */}
+              <div
+                className={cn(
+                  "absolute left-1/2 top-[12px] h-[196px] w-[292px] border border-[#e2ded7] bg-white px-4 pt-6 text-center shadow-card",
+                  opening && "cover-card-journey",
+                )}
                 style={{
-                  transform: `translate(-50%, ${opening ? "-236px" : "0px"})`,
-                  transition: `transform ${CARD_MS}ms cubic-bezier(0.16, 1, 0.3, 1) ${CARD_DELAY_MS}ms`,
+                  zIndex: envelopeGone ? 45 : 20,
+                  transform: "translate(-50%, 0)",
+                  animationDelay: `${CARD_DELAY_MS}ms`,
                 }}
               >
                 <p className="font-silenter text-[34px] leading-none text-wine">
@@ -207,7 +242,12 @@ export function CoverOverlay({ guestName, dateShort, onOpen }: CoverOverlayProps
               </div>
 
               {/* front pocket */}
-              <div className="absolute inset-0 z-[30] rounded-[6px] border border-[#ddd8d0] bg-gradient-to-b from-[#fdfcfa] to-[#f3f0ea] shadow-[inset_0_-14px_24px_rgba(0,0,0,0.05)]">
+              <div
+                className={cn(
+                  "absolute inset-0 z-[30] rounded-[6px] border border-[#ddd8d0] bg-gradient-to-b from-[#fdfcfa] to-[#f3f0ea] shadow-[inset_0_-14px_24px_rgba(0,0,0,0.05)] transition-opacity duration-500",
+                  envelopeGone && "opacity-0",
+                )}
+              >
                 <div className="absolute inset-x-0 bottom-[14px] text-center">
                   <p className="font-lora text-[12px] uppercase tracking-[3px] text-foreground/70">
                     Thân mời:
@@ -221,13 +261,16 @@ export function CoverOverlay({ guestName, dateShort, onOpen }: CoverOverlayProps
 
               {/* triangular flap */}
               <div
-                className="absolute inset-x-0 top-0 h-[122px] border-t border-[#ddd8d0] bg-gradient-to-b from-[#faf8f4] to-[#e9e5dd] shadow-sm"
+                className={cn(
+                  "absolute inset-x-0 top-0 h-[122px] border-t border-[#ddd8d0] bg-gradient-to-b from-[#faf8f4] to-[#e9e5dd] shadow-sm",
+                  envelopeGone && "opacity-0",
+                )}
                 style={{
                   zIndex: flapBehind ? 15 : 40,
                   clipPath: "polygon(0 0, 100% 0, 50% 100%)",
                   transformOrigin: "top center",
                   transform: opening ? "rotateX(-180deg)" : "rotateX(0deg)",
-                  transition: `transform ${FLAP_MS}ms cubic-bezier(0.45, 0, 0.2, 1) ${FLAP_DELAY_MS}ms`,
+                  transition: `transform ${FLAP_MS}ms cubic-bezier(0.45, 0, 0.2, 1) ${FLAP_DELAY_MS}ms, opacity 500ms ease`,
                 }}
               />
 
