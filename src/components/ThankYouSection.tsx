@@ -14,9 +14,9 @@ export function ThankYouSection() {
       <SectionDivider />
 
       <p className="font-lora text-foreground/75 leading-loose mt-6">
-        Cảm ơn mọi người đã trở thành một phần quan trọng
+        Cảm ơn mọi người đã trở thành
         <br />
-        trong ngày đặc biệt này!
+        một phần quan trọng trong ngày đặc biệt này!
       </p>
 
       <p className="font-anisa text-[34px] text-wine mt-10 leading-tight">

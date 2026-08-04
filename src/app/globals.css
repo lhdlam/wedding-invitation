@@ -8,37 +8,39 @@
 
 :root {
   --background: 40 25% 99%;
-  --foreground: 24 8% 13%;
+  /* Warm espresso ink instead of flat black — softer against the pearl paper
+     and harmonious with the crimson accents. */
+  --foreground: 22 15% 27%;
   --card: 0 0% 100%;
-  --card-foreground: 24 8% 13%;
+  --card-foreground: 22 15% 27%;
   --popover: 0 0% 100%;
-  --popover-foreground: 24 8% 13%;
-  --primary: 24 8% 16%;
+  --popover-foreground: 22 15% 27%;
+  --primary: 22 15% 25%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 32 12% 94%;
-  --secondary-foreground: 24 8% 20%;
+  --secondary: 32 14% 94%;
+  --secondary-foreground: 22 15% 30%;
   --muted: 32 14% 94%;
-  --muted-foreground: 26 6% 44%;
+  --muted-foreground: 25 10% 46%;
   --accent: 357 60% 40%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 70% 55%;
   --destructive-foreground: 0 0% 100%;
-  --border: 32 12% 86%;
-  --input: 32 12% 88%;
+  --border: 32 16% 85%;
+  --input: 32 16% 87%;
   --ring: 357 60% 40%;
   --radius: 0.75rem;
 
   /* Deep crimson — the suite's single accent colour. */
   --wine: 357 60% 40%;
-  /* `gold` kept as the utility name; the value is now the suite's warm gray
-     used for hairlines, dots and small labels. */
-  --gold: 28 8% 55%;
-  --gold-light: 30 10% 72%;
-  /* `blush` kept as the utility name; the ramp is now pearl → light gray. */
-  --blush-50: 40 20% 98%;
-  --blush-100: 38 16% 96%;
-  --blush-200: 34 12% 90%;
-  --blush-300: 32 10% 82%;
+  /* `gold` kept as the utility name; the value is antique bronze, used for
+     hairlines, dots and small labels. */
+  --gold: 30 24% 50%;
+  --gold-light: 33 28% 70%;
+  /* `blush` kept as the utility name; the ramp is pearl → warm light taupe. */
+  --blush-50: 40 22% 98%;
+  --blush-100: 38 18% 96%;
+  --blush-200: 34 16% 90%;
+  --blush-300: 32 14% 81%;
 
   --gradient-romance: linear-gradient(135deg, hsl(40 20% 98%) 0%, hsl(36 14% 94%) 50%, hsl(32 12% 92%) 100%);
   --gradient-veil: linear-gradient(180deg, hsl(0 0% 100% / 0) 0%, hsl(38 16% 96% / 0.4) 60%, hsl(38 16% 96%) 100%);

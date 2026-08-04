@@ -19,7 +19,7 @@ export function TimelineSection({ entries }: TimelineSectionProps) {
         <p className="mb-3 text-[16px] mobilel:text-[18px] uppercase tracking-[4px] text-wine font-bold">
           Timeline of
         </p>
-        <h2 className="font-silenter text-5xl text-foreground mt-2 mb-3">
+        <h2 className="font-silenter text-5xl text-wine mt-2 mb-3">
           Wedding
         </h2>
       </Reveal>
