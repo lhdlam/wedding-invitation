@@ -71,8 +71,8 @@ const memv = localFont({
 
 /* Per-route pages override both fields with their own reception details. */
 export const metadata: Metadata = {
-  title: `${GROOM.fullName} & ${BRIDE.fullName} · Thiệp cưới`,
-  description: `Trân trọng báo tin Lễ Thành Hôn của chúng tôi — ${GROOM.shortName} & ${BRIDE.shortName}, tháng 09.2026.`,
+  title: `${GROOM.shortName} & ${BRIDE.shortName} · Thiệp cưới`,
+  description: `Save our date.`,
 };
 
 export default function RootLayout({
