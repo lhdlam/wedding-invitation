@@ -195,9 +195,6 @@ function ChapterHeader({
 }) {
   return (
     <div className="text-center pt-8 pb-5">
-      <p className="font-lora text-[12px] uppercase tracking-[4px] text-gold">
-        Chương {number}
-      </p>
       <p className="font-anisa text-[34px] text-wine leading-tight mt-1">
         {title}
       </p>
