@@ -20,23 +20,13 @@ const src = (name: string) => `/images/album-2/${name}.webp`;
 export const ALL_PHOTOS: readonly LightboxPhoto[] = [
   "DSC00083",
   "DSC00188",
-  "DSC00761",
-  "DSC00838",
-  "DSC00878",
   "DSC00927",
-  "DSC00957",
   "DSC01008",
-  "DSC01028",
   "DSC01048",
   "DSC01052",
-  "DSC01062",
-  "DSC01120",
-  "DSC01158",
-  "DSC01174",
   "DSC01202",
   "DSC01329",
   "DSC01344",
-  "DSC01399",
   "DSC01470",
   "DSC01485",
   "DSC01504",
@@ -297,17 +287,11 @@ export function AlbumShowcase() {
         onOpen={setOpenIndex}
       />
 
-      {/* <Pair left="DSC00878" right="DSC00957" onOpen={setOpenIndex} /> */}
       <Pair left="DSC01008" right="DSC01048" onOpen={setOpenIndex} />
 
 
 {/* 
-      <Pair left="DSC01028" right="DSC01120" onOpen={setOpenIndex} />
-      <Pair left="DSC01158" right="DSC01174" onOpen={setOpenIndex} /> */}
       {/* was a duplicate of 01344/01525 — swapped for the two unplaced frames */}
-      {/* <Pair left="DSC00838" right="DSC01048" onOpen={setOpenIndex} />
-      <Pair left="DSC00761" right="DSC01399" onOpen={setOpenIndex} /> */}
-      {/* <Wide name="DSC01008" onOpen={setOpenIndex} /> */}
       <Wide name="DSC01485" onOpen={setOpenIndex} />
       {/* closing frames — the embroidered veil with the couple's names */}
       {/* <Wide name="voan1" onOpen={setOpenIndex} /> */}
