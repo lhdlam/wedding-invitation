@@ -18,7 +18,9 @@ const src = (name: string) => `/images/album-2/${name}.webp`;
 
 /** Studio whites → sea & rocks → the closing frames (the couple's cut of 26). */
 export const ALL_PHOTOS: readonly LightboxPhoto[] = [
-  "DSC00083",
+  "DSC00111",
+  "DSC09942",
+  "DSC09992",
   "DSC00188",
   "DSC00927",
   "DSC01008",
@@ -262,7 +264,8 @@ export function AlbumShowcase() {
         title="Hoa & Lá"
         quote=""
       />
-      <Pair left="DSC00083" right="DSC00188" onOpen={setOpenIndex} />
+      <Pair left="DSC00111" right="DSC00188" onOpen={setOpenIndex} />
+      <Pair left="DSC09942" right="DSC09992" onOpen={setOpenIndex} />
 
       {/* Chương 02 — biển, ghềnh đá và cỏ xanh */}
       <ChapterHeader

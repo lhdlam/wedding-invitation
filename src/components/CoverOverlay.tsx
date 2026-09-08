@@ -64,11 +64,6 @@ const COVER_STYLES = `
   50% { transform: scale(1.07); }
 }
 
-@keyframes cover-cursor-tap {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-6px) scale(1.08); }
-}
-
 @keyframes cover-envelope-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
@@ -95,12 +90,6 @@ const COVER_STYLES = `
   will-change: transform;
 }
 
-.cover-cursor-tap {
-  animation: cover-cursor-tap 1.5s ease-in-out infinite;
-  transform-origin: center;
-  will-change: transform;
-}
-
 .cover-envelope-float {
   animation: cover-envelope-float 5s ease-in-out infinite;
 }
@@ -117,7 +106,6 @@ const COVER_STYLES = `
 
 @media (prefers-reduced-motion: reduce) {
   .cover-seal-breathe,
-  .cover-cursor-tap,
   .cover-envelope-float,
   .cover-heart-burst,
   .cover-card-journey {
@@ -324,24 +312,6 @@ export function CoverOverlay({ dateShort, side, onOpen }: CoverOverlayProps) {
                   src="/images/wax-seal-red.webp"
                   alt=""
                   className="cover-seal-breathe w-[86px] object-contain drop-shadow-md"
-                />
-              </button>
-
-              {/* tap cursor hint */}
-              <button
-                type="button"
-                onClick={handleOpen}
-                aria-label="Mở thiệp"
-                className={cn(
-                  "absolute left-[58%] top-[138px] z-[50] cursor-pointer opacity-80 transition-opacity duration-300",
-                  opening && "pointer-events-none opacity-0",
-                )}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/cursor.webp"
-                  alt=""
-                  className="cover-cursor-tap w-[64px] object-contain"
                 />
               </button>
             </div>
