@@ -11,6 +11,7 @@ import type {
   CouplePerson,
   FamilySide,
   InvitationContent,
+  SideKey,
 } from "@/types/invitation";
 
 export const GROOM: CouplePerson = {
@@ -45,6 +46,19 @@ export const FAMILIES: readonly FamilySide[] = [
   },
 ];
 
+/**
+ * Announcement order per side — the hosting family's child is named first:
+ * nhà trai reads "Đăng Lâm & Hoài Thương", nhà gái reads the reverse.
+ */
+export function coupleFor(side: SideKey): readonly [CouplePerson, CouplePerson] {
+  return side === "gai" ? [BRIDE, GROOM] : [GROOM, BRIDE];
+}
+
+/** Family columns per side — the hosting family stands first. */
+export function familiesFor(side: SideKey): readonly FamilySide[] {
+  return side === "gai" ? [...FAMILIES].reverse() : FAMILIES;
+}
+
 /** Reception-day running order. Only the two pre-ceremony rows shift per side. */
 const timeline = (ceremony: string, photos: string) =>
   [
@@ -69,10 +83,12 @@ export const GROOM_SIDE: InvitationContent = {
     lunarNote: "(Tức ngày 09 tháng 08 năm Bính Ngọ)",
   },
   venue: {
-    name: "Nhà hàng tiệc cưới Tín Nghĩa II",
+    name: "Nhà hàng tiệc cưới Tín Nghĩa 2",
     address: "Thôn An Trung, Xã Cam Lộ, Tỉnh Quảng Trị",
-    mapQuery:
-      "Nhà hàng tiệc cưới Tín Nghĩa II, Thôn An Trung, Xã Cam Lộ, Quảng Trị",
+    /* Exact pin of "Nhà Hàng Tiệc Cưới Tín Nghĩa II Cùa"
+       (maps.app.goo.gl/qqJybmaQ6XTz4FG37). */
+    mapQuery: "16.739874,106.95726",
+    mapLink: "https://maps.app.goo.gl/qqJybmaQ6XTz4FG37",
   },
   countdownIso: "2026-09-19T09:00:00+07:00",
   timeline: timeline("09:00", "09:30"),
@@ -93,9 +109,10 @@ export const BRIDE_SIDE: InvitationContent = {
   venue: {
     name: "Nhà hàng tiệc cưới Quốc Trang",
     address: "Thôn Mai Lộc 2, Xã Cam Lộ, Tỉnh Quảng Trị",
-    /* The restaurant has no Google Maps listing, so the pin targets the hamlet
-       instead — swap in exact coordinates once the couple confirms them. */
-    mapQuery: "Mai Lộc, Cam Lộ, Quảng Trị",
+    /* Exact pin of "Trung tâm Tổ chức Sự kiện, tiệc cưới Quốc Trang"
+       (maps.app.goo.gl/3CCfzBypfUpGdyH77). */
+    mapQuery: "16.7459166,106.970498",
+    mapLink: "https://maps.app.goo.gl/3CCfzBypfUpGdyH77",
   },
   countdownIso: "2026-09-18T08:00:00+07:00",
   timeline: timeline("08:00", "08:30"),

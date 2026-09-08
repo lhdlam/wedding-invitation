@@ -14,7 +14,7 @@ interface TimelineSectionProps {
  */
 export function TimelineSection({ entries }: TimelineSectionProps) {
   return (
-    <section className="relative px-4 py-16 mobilem:px-5 mobilel:px-6 mobilel:py-20 text-center">
+    <section className="relative px-4 py-10 mobilem:px-5 mobilel:px-6 mobilel:py-12 text-center">
       <Reveal>
         <p className="mb-3 text-[16px] mobilel:text-[18px] uppercase tracking-[4px] text-wine font-bold">
           Timeline of
@@ -26,7 +26,7 @@ export function TimelineSection({ entries }: TimelineSectionProps) {
 
       <SectionDivider />
 
-      <div className="relative mt-10 max-w-[300px] mx-auto text-left">
+      <div className="relative mt-6 max-w-[300px] mx-auto text-left">
         {/* spine */}
         <span
           className="absolute left-[7px] top-[6px] bottom-[6px] w-px bg-foreground/15"

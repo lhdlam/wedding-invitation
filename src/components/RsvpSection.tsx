@@ -30,25 +30,53 @@ const CHIP_BASE = "py-3 rounded-lg border transition-all font-lora";
 const CHIP_SELECTED =
   "bg-primary text-primary-foreground border-primary shadow-soft";
 const CHIP_UNSELECTED =
-  "bg-white/60 border-blush-200 hover:border-primary/50";
+  "bg-[#fbf8f1]/65 border-blush-200 hover:border-primary/50";
 
 const FIELD_LABEL =
   "font-lora font-medium text-xs uppercase tracking-widest text-muted-foreground";
 
+/** Apps Script web-app URL — see docs/GOOGLE_SHEET_SETUP.md. */
+const WEBHOOK_URL = process.env.NEXT_PUBLIC_RSVP_WEBHOOK_URL;
+
 /**
  * RSVP form: name, attendance radio group, party size, guest-of and a message.
- * All state is local — the clone has no backend, so submitting simply swaps the
- * form for an inline thank-you line.
+ * On submit the answers are POSTed to a Google Apps Script web app that appends
+ * them to a Sheet; without a configured URL the form still confirms locally.
  */
 export function RsvpSection() {
   const [form, setForm] = useState<RsvpFormState>(INITIAL_STATE);
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState(false);
   const radioRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (form.name.trim() === "") return;
-    setSubmitted(true);
+    if (form.name.trim() === "" || sending) return;
+
+    if (!WEBHOOK_URL) {
+      setSubmitted(true);
+      return;
+    }
+
+    setSending(true);
+    setError(false);
+    try {
+      // Apps Script redirects to a googleusercontent.com origin that sends no
+      // CORS headers, so the response is opaque — a resolved fetch is our only
+      // success signal. text/plain keeps the request preflight-free.
+      await fetch(WEBHOOK_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ ...form, name: form.name.trim() }),
+      });
+      setSubmitted(true);
+    } catch {
+      setError(true);
+    } finally {
+      setSending(false);
+    }
   }
 
   function handleRadioKeyDown(e: KeyboardEvent<HTMLButtonElement>, index: number) {
@@ -64,7 +92,7 @@ export function RsvpSection() {
   }
 
   return (
-    <section className="relative px-4 pt-16 pb-4 mobilem:px-5 mobilel:px-6 mobilel:pt-20">
+    <section className="relative px-4 pt-10 pb-4 mobilem:px-5 mobilel:px-6 mobilel:pt-12">
       <div className="text-center mb-10">
         <p className="mb-3 text-[16px] mobilel:text-[18px] uppercase tracking-[4px] text-wine font-bold">
           Gửi lời nhắn &amp; xác nhận
@@ -94,7 +122,7 @@ export function RsvpSection() {
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, name: e.target.value }))
               }
-              className="flex h-10 w-full rounded-md border px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm font-lora mt-2 border-blush-200 focus:border-primary bg-white"
+              className="flex h-10 w-full rounded-md border px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm font-lora mt-2 border-blush-200 focus:border-primary bg-[#fbf8f1]"
             />
           </div>
 
@@ -110,7 +138,7 @@ export function RsvpSection() {
                 return (
                   <div
                     key={option.value}
-                    className="flex items-center px-3 rounded-lg bg-white/60 border border-blush-200"
+                    className="flex items-center px-3 rounded-lg bg-[#fbf8f1]/65 border border-blush-200"
                   >
                     <button
                       type="button"
@@ -203,16 +231,26 @@ export function RsvpSection() {
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, message: e.target.value }))
               }
-              className="flex w-full rounded-md border px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-ring focus-visible:ring-offset-2 font-lora mt-2 bg-white/70 border-blush-200 focus:border-primary min-h-[100px]"
+              className="flex w-full rounded-md border px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-ring focus-visible:ring-offset-2 font-lora mt-2 bg-[#fbf8f1]/80 border-blush-200 focus:border-primary min-h-[100px]"
             />
           </div>
 
           <button
             type="submit"
+            disabled={sending}
             className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 font-lora w-full bg-wine hover:bg-wine/90 text-white tracking-widest uppercase text-sm py-6 shadow-soft"
           >
-            Gửi xác nhận
+            {sending ? "Đang gửi..." : "Gửi xác nhận"}
           </button>
+
+          {error ? (
+            <p
+              role="alert"
+              className="text-center font-lora text-sm text-red-600"
+            >
+              Gửi không thành công, bạn thử lại giúp mình nhé.
+            </p>
+          ) : null}
         </form>
       )}
     </section>

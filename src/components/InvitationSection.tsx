@@ -24,7 +24,7 @@ interface InvitationSectionProps {
  * below inside the same card.
  */
 export function InvitationSection({
-  guestName = "Bạn",
+  guestName = "...",
   receptionTime,
   dateLabel,
   date,
@@ -48,11 +48,11 @@ export function InvitationSection({
   return (
     <section
       className={cn(
-        "mobilel:px-6 mobilel:py-20 relative px-4 py-16",
+        "mobilel:px-6 mobilel:py-12 relative px-4 py-10",
         className,
       )}
     >
-      <div className="mx-auto max-w-[400px] border border-foreground/20 bg-white/80 shadow-card">
+      <div className="mx-auto max-w-[400px] border border-foreground/20 bg-[#fbf8f1]/85 shadow-card">
         <div className="flex">
           {/* Left — invitation copy */}
           <div className="flex-1 px-5 mobilem:px-6 py-10 text-left">
@@ -79,11 +79,26 @@ export function InvitationSection({
             <p className="font-lora text-[14px] text-foreground/85 mt-5">
               Tại nhà hàng tiệc cưới
             </p>
-            <p className="font-anisa text-[38px] text-wine leading-[36px] mt-1">
+            <a
+              href={venue.mapLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block font-anisa text-[38px] text-wine leading-[36px] mt-1"
+            >
               {venue.name.replace("Nhà hàng tiệc cưới ", "")}
-            </p>
+            </a>
+            {/* "Tỉnh …" never splits mid-way: the province wraps as one unit. */}
             <p className="font-lora italic text-[12.5px] text-muted-foreground mt-2 leading-relaxed">
-              {venue.address}
+              {venue.address.includes(", Tỉnh ") ? (
+                <>
+                  {venue.address.split(", Tỉnh ")[0]},{" "}
+                  <span className="whitespace-nowrap">
+                    Tỉnh {venue.address.split(", Tỉnh ")[1]}
+                  </span>
+                </>
+              ) : (
+                venue.address
+              )}
             </p>
 
             <p className="font-lora text-[14px] text-foreground/85 mt-5">
@@ -92,8 +107,15 @@ export function InvitationSection({
             <p className="font-lora text-[19px] text-wine font-bold tracking-[2px] mt-1">
               {time} | {dateLabel}
             </p>
+            {/* Keep "năm Bính Ngọ" together so the year name never orphans. */}
             <p className="font-lora italic text-[12.5px] text-muted-foreground mt-1">
-              {date.lunarNote.replace("(Tức", "Nhằm").replace(")", "")}
+              {date.lunarNote
+                .replace("(Tức", "Nhằm")
+                .replace(")", "")
+                .replace(/ năm .+$/, "")}{" "}
+              <span className="whitespace-nowrap">
+                {date.lunarNote.match(/năm .+(?=\))/)?.[0] ?? ""}
+              </span>
             </p>
 
             <p className="font-lora italic text-[13px] text-foreground/75 mt-6 leading-relaxed">
@@ -104,14 +126,14 @@ export function InvitationSection({
           </div>
 
           {/* Right — giant stacked numerals, the suite's signature motif */}
-          <div className="flex flex-col items-center justify-center gap-4 pr-4 mobilem:pr-5 py-10">
+          <div className="flex flex-col items-center justify-center gap-3 pr-4 mobilem:pr-5 py-10">
             {numerals.map((value, index) => (
               <Reveal
                 key={`${value}-${index}`}
                 as="p"
                 from="right"
                 delay={index * 0.12}
-                className="font-lora text-[64px] mobilel:text-[72px] leading-[0.9] text-wine"
+                className="font-lora text-[78px] mobilel:text-[88px] leading-[0.9] text-wine"
               >
                 {value}
               </Reveal>
@@ -141,6 +163,28 @@ export function InvitationSection({
               style={{ pointerEvents: mapActive ? "auto" : "none" }}
             />
           </div>
+          {/* Directions go through the venue's own Maps listing, not the raw pin */}
+          <a
+            href={venue.mapLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md border border-wine bg-[#fbf8f1] py-3 font-lora text-[13px] uppercase tracking-[2px] text-wine transition-colors hover:bg-wine/10"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            Chỉ đường tới nhà hàng
+          </a>
         </div>
       </div>
     </section>

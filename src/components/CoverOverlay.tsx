@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { HEART_PATH } from "@/components/icons";
+import { coupleFor } from "@/data/invitation";
+import type { SideKey } from "@/types/invitation";
 import { cn } from "@/lib/utils";
 
 /* Opening sequence, all delays measured from the seal click:
@@ -125,10 +127,12 @@ const COVER_STYLES = `
 `;
 
 export interface CoverOverlayProps {
-  /** Name rendered on the envelope pocket. Default placeholder: "Bạn". */
+  /** Name rendered on the envelope pocket. Default placeholder: "...". */
   guestName: string;
   /** Short date on the sliding card, e.g. "19.09.26". */
   dateShort: string;
+  /** Hosting side — decides whose name is read first on the card. */
+  side: SideKey;
   /** Fired the moment the wax seal is clicked, so the page can unlock scroll + start audio. */
   onOpen: () => void;
 }
@@ -139,7 +143,8 @@ export interface CoverOverlayProps {
  * the "Save our date" card slides out, and the whole scene dissolves into
  * the invitation.
  */
-export function CoverOverlay({ guestName, dateShort, onOpen }: CoverOverlayProps) {
+export function CoverOverlay({ guestName, dateShort, side, onOpen }: CoverOverlayProps) {
+  const [first, second] = coupleFor(side);
   const [opening, setOpening] = useState(false);
   const [flapBehind, setFlapBehind] = useState(false);
   const [envelopeGone, setEnvelopeGone] = useState(false);
@@ -187,7 +192,7 @@ export function CoverOverlay({ guestName, dateShort, onOpen }: CoverOverlayProps
     <div className="pointer-events-none fixed inset-0 z-[200] flex justify-center">
       <style>{COVER_STYLES}</style>
       <div
-        className="pointer-events-auto relative h-[100dvh] w-full max-w-[480px] isolate bg-gradient-to-b from-[#fdfcfa] via-[#faf8f4] to-[#f2efe9]"
+        className="pointer-events-auto relative h-[100dvh] w-full max-w-[480px] isolate bg-gradient-to-b from-[#faf5ec] via-[#f7f2ea] to-[#eee8dc]"
         style={{
           opacity: opening ? 0 : 1,
           transform: opening ? "scale(1.04)" : "scale(1)",
@@ -212,7 +217,7 @@ export function CoverOverlay({ guestName, dateShort, onOpen }: CoverOverlayProps
               {/* CARD — slides out, glides back to centre, zooms and dissolves */}
               <div
                 className={cn(
-                  "absolute left-1/2 top-[12px] h-[196px] w-[292px] border border-[#e2ded7] bg-white px-4 pt-6 text-center shadow-card",
+                  "absolute left-1/2 top-[12px] h-[196px] w-[292px] border border-[#e2ded7] bg-[#fbf8f1] px-4 pt-6 text-center shadow-card",
                   opening && "cover-card-journey",
                 )}
                 style={{
@@ -228,7 +233,7 @@ export function CoverOverlay({ guestName, dateShort, onOpen }: CoverOverlayProps
                   {dateShort}
                 </p>
                 <p className="font-lora text-[11px] uppercase tracking-[3px] text-wine mt-2">
-                  Đăng Lâm &amp; Hoài Thương
+                  {first.shortName} &amp; {second.shortName}
                 </p>
                 <svg
                   viewBox="0 0 20 18"

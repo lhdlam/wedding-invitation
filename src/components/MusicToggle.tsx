@@ -18,7 +18,7 @@ export function MusicToggle({ playing, onToggle, className }: MusicToggleProps) 
       aria-pressed={playing}
       onClick={onToggle}
       className={cn(
-        "fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-white/90 backdrop-blur shadow-petal border border-blush-200 flex items-center justify-center hover:scale-110 transition-transform",
+        "fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-[#fbf8f1]/90 backdrop-blur shadow-petal border border-blush-200 flex items-center justify-center hover:scale-110 transition-transform",
         className,
       )}
     >

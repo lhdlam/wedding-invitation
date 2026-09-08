@@ -69,7 +69,7 @@ export function CountdownSection({ targetIso }: CountdownSectionProps) {
   }, [targetIso]);
 
   return (
-    <section className="px-4 pt-16 mobilel:px-6 mobilel:pt-20 relative text-center pb-16">
+    <section className="px-4 pt-10 mobilel:px-6 mobilel:pt-12 relative text-center pb-10">
       <h2 className="font-silenter text-5xl text-wine mb-3">Countdown</h2>
       <p className="font-lora text-[16px] text-foreground/80 mt-5 mb-8">
         Đếm ngược đến ngày hạnh phúc

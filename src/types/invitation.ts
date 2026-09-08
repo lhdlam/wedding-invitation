@@ -42,6 +42,8 @@ export interface Venue {
   address: string;
   /** Query handed to the Google Maps embed. */
   mapQuery: string;
+  /** Share link to the venue's Google Maps listing — where clicks lead. */
+  mapLink: string;
 }
 
 export interface CouplePerson {

@@ -1,11 +1,13 @@
 "use client";
 
 import { Reveal } from "@/components/Reveal";
-import { BRIDE, FAMILIES, GROOM } from "@/data/invitation";
+import { coupleFor, familiesFor } from "@/data/invitation";
 import { cn } from "@/lib/utils";
-import type { FamilySide, WeddingDate } from "@/types/invitation";
+import type { FamilySide, SideKey, WeddingDate } from "@/types/invitation";
 
 interface FamiliesSectionProps {
+  /** Hosting side — its family and its child are named first. */
+  side: SideKey;
   families?: readonly FamilySide[];
   /** Rendered bold inside the ceremony line, e.g. "9:00, Thứ Bảy". */
   ceremonyTime: string;
@@ -19,25 +21,27 @@ interface FamiliesSectionProps {
  * crimson script with their ranks between, then the ceremony line and date.
  */
 export function FamiliesSection({
-  families = FAMILIES,
+  side,
+  families,
   ceremonyTime,
   date,
   className,
 }: FamiliesSectionProps) {
-  const [groomSide, brideSide] = families;
+  const [hostSide, guestSide] = families ?? familiesFor(side);
+  const [first, second] = coupleFor(side);
   const dateShort = `${date.day}.${date.monthLabel.replace("tháng ", "")}.26`;
 
   return (
     <div
       className={cn(
-        "relative px-4 py-16 mobilem:px-5 mobilel:px-6 mobilel:py-20",
+        "relative px-4 py-10 mobilem:px-5 mobilel:px-6 mobilel:py-12",
         className,
       )}
     >
-      <div className="mx-auto max-w-[400px] border border-foreground/20 bg-white/80 px-4 mobilem:px-5 py-10 text-center shadow-card">
+      <div className="mx-auto max-w-[400px] border border-foreground/20 bg-[#fbf8f1]/85 px-4 mobilem:px-5 py-10 text-center shadow-card">
         <div className="flex justify-between items-start gap-2 sm:gap-4">
-          {groomSide ? <FamilyColumn side={groomSide} delay={0} /> : null}
-          {brideSide ? <FamilyColumn side={brideSide} delay={0.1} /> : null}
+          {hostSide ? <FamilyColumn side={hostSide} delay={0} /> : null}
+          {guestSide ? <FamilyColumn side={guestSide} delay={0.1} /> : null}
         </div>
 
         <p className="font-lora text-[14px] mobilel:text-[15px] text-foreground/85 uppercase tracking-[2px] mt-10 leading-relaxed">
@@ -48,19 +52,19 @@ export function FamiliesSection({
 
         <div className="mt-8">
           <Reveal as="p" from="up" className="font-anisa text-[44px] mobilel:text-[48px] text-wine leading-[44px]">
-            {GROOM.fullName}
+            {first.fullName}
           </Reveal>
           <Reveal from="none" delay={0.1} className="my-3 flex items-center justify-center gap-3">
             <span className="font-lora text-[13px] uppercase tracking-[2px] text-foreground/70">
-              {GROOM.rank}
+              {first.rank}
             </span>
             <span className="font-anisa text-[26px] text-wine leading-none">&amp;</span>
             <span className="font-lora text-[13px] uppercase tracking-[2px] text-foreground/70">
-              {BRIDE.rank}
+              {second.rank}
             </span>
           </Reveal>
           <Reveal as="p" from="up" delay={0.2} className="font-anisa text-[44px] mobilel:text-[48px] text-wine leading-[44px]">
-            {BRIDE.fullName}
+            {second.fullName}
           </Reveal>
         </div>
 
@@ -91,14 +95,18 @@ function FamilyColumn({ side, delay }: FamilyColumnProps) {
       <p className="font-lora text-[13px] mobilel:text-[14px] text-foreground/80">
         {side.label}
       </p>
-      <p className="font-lora text-foreground font-bold uppercase text-[12px] mobilem:text-[13px] mobilel:text-[14px]">
-        {side.father.replace("Ông. ", "Ông ")}
-      </p>
-      {side.mother ? (
-        <p className="font-lora text-foreground font-bold uppercase text-[12px] mobilem:text-[13px] mobilel:text-[14px]">
-          {side.mother.replace("Bà. ", "Bà ")}
+      {/* Fixed two-line box on both columns so the address rows align; a
+          single parent name centres within it. */}
+      <div className="flex min-h-[46px] flex-col justify-center gap-1">
+        <p className="font-lora text-foreground font-bold uppercase whitespace-nowrap text-[11.5px] mobilem:text-[12.5px] mobilel:text-[13px]">
+          {side.father.replace("Ông. ", "Ông ")}
         </p>
-      ) : null}
+        {side.mother ? (
+          <p className="font-lora text-foreground font-bold uppercase whitespace-nowrap text-[11.5px] mobilem:text-[12.5px] mobilel:text-[13px]">
+            {side.mother.replace("Bà. ", "Bà ")}
+          </p>
+        ) : null}
+      </div>
       <p className="font-lora italic text-[10px] mobilem:text-[11px] mobilel:text-xs text-muted-foreground pt-1">
         {side.address[0]}
         <br />

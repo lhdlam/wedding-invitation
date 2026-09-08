@@ -2,30 +2,23 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { AlbumSection } from "@/components/AlbumSection";
+import { AlbumShowcase } from "@/components/AlbumShowcase";
 import { CountdownSection } from "@/components/CountdownSection";
 import { CoverOverlay } from "@/components/CoverOverlay";
 import { FamiliesSection } from "@/components/FamiliesSection";
-import { GiftSection } from "@/components/GiftSection";
 import { HeroSection } from "@/components/HeroSection";
 import { InvitationSection } from "@/components/InvitationSection";
 import { LoveStorySection } from "@/components/LoveStorySection";
 import { MusicToggle } from "@/components/MusicToggle";
 import { PetalField } from "@/components/PetalField";
-import { PhotoBreak } from "@/components/PhotoBreak";
-import { PhotoLightbox } from "@/components/PhotoLightbox";
+// import { PhotoBreak } from "@/components/PhotoBreak"; // tạm tắt cùng với <PhotoBreak /> bên dưới
 import { RsvpSection } from "@/components/RsvpSection";
 import { ThankYouSection } from "@/components/ThankYouSection";
 import { TimelineSection } from "@/components/TimelineSection";
 import type { InvitationContent } from "@/types/invitation";
 
-/** Placeholder guest name — the target renders this when no guest token is present. */
-const GUEST_NAME = "Bạn";
-
-interface LightboxPhoto {
-  src: string;
-  alt: string;
-}
+/** Placeholder guest name — a dotted blank until a guest token is provided. */
+const GUEST_NAME = "...";
 
 interface InvitationPageProps {
   /** Which of the two receptions this page invites to. */
@@ -43,7 +36,6 @@ export function InvitationPage({ content }: InvitationPageProps) {
      `coverSkipped` unmounts it only for the ?open=1 preview path. */
   const [coverSkipped, setCoverSkipped] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const [photo, setPhoto] = useState<LightboxPhoto | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   /* `?open=1` skips the envelope — handy for previews and shared screenshots.
@@ -98,21 +90,16 @@ export function InvitationPage({ content }: InvitationPageProps) {
     }
   }, []);
 
-  const handlePhotoClick = useCallback((src: string, alt: string) => {
-    setPhoto({ src, alt });
-  }, []);
-
-  const handleCloseLightbox = useCallback(() => setPhoto(null), []);
-
   return (
     <div className="relative bg-background min-h-screen overflow-x-clip">
       <main
         className="relative max-w-[480px] mx-auto min-h-screen shadow-petal bg-top bg-repeat"
-        style={{ backgroundImage: "url(/images/background-white.png)" }}
+        style={{ backgroundImage: "url(/images/background-white.webp)" }}
       >
-        <HeroSection dateLabel={content.dateLabel} />
-        <PhotoBreak />
+        <HeroSection dateLabel={content.dateLabel} side={content.side} />
+        {/* <PhotoBreak /> */}
         <FamiliesSection
+          side={content.side}
           ceremonyTime={content.ceremonyTime}
           date={content.date}
         />
@@ -123,13 +110,12 @@ export function InvitationPage({ content }: InvitationPageProps) {
           date={content.date}
           venue={content.venue}
         />
-        <CountdownSection targetIso={content.countdownIso} />
-        <LoveStorySection onPhotoClick={handlePhotoClick} />
         <TimelineSection entries={content.timeline} />
-        <AlbumSection onPhotoClick={handlePhotoClick} />
+        <CountdownSection targetIso={content.countdownIso} />
+        <LoveStorySection />
+        <AlbumShowcase />
         <RsvpSection />
-        <GiftSection />
-        <ThankYouSection />
+        <ThankYouSection side={content.side} />
       </main>
 
       {/* Ambient layer — fixed, behind the column */}
@@ -139,12 +125,11 @@ export function InvitationPage({ content }: InvitationPageProps) {
 
       <MusicToggle playing={playing} onToggle={handleToggleMusic} />
 
-      <PhotoLightbox photo={photo} onClose={handleCloseLightbox} />
-
       {!coverSkipped && (
         <CoverOverlay
           guestName={GUEST_NAME}
           dateShort={content.dateLabel.replace(".2026", ".26")}
+          side={content.side}
           onOpen={handleOpen}
         />
       )}

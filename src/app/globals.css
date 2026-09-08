@@ -7,7 +7,9 @@
    ========================================================================== */
 
 :root {
-  --background: 40 25% 99%;
+  /* Warm sand — lifted from the pampas/studio tones in the couple's photos;
+     the cool sea-blue frames pop against it (warm ground, cool subject). */
+  --background: 37 45% 94%;
   /* Warm espresso ink instead of flat black — softer against the pearl paper
      and harmonious with the crimson accents. */
   --foreground: 22 15% 27%;
