@@ -39,12 +39,12 @@ server. Web chỉ dùng ảnh WebP đã tối ưu trong `public/images/`.
 File cấu hình `ecosystem.config.js` đã có sẵn ở gốc repo:
 
 ```bash
-pm2 start ecosystem.config.js   # chạy app tên "wedding" ở port 3000
+pm2 start ecosystem.config.js   # chạy app tên "wedding" ở port 3003
 pm2 save                        # lưu danh sách process
 pm2 startup                     # in ra 1 lệnh sudo — copy chạy để tự khởi động cùng VPS
 ```
 
-Kiểm tra: `pm2 status` (phải thấy `wedding · online`), `curl -I http://localhost:3000`.
+Kiểm tra: `pm2 status` (phải thấy `wedding · online`), `curl -I http://localhost:3003`.
 
 Các lệnh hay dùng:
 
@@ -65,13 +65,13 @@ server {
 
     # Ảnh/nhạc/tĩnh: cache 30 ngày ở trình duyệt
     location ~* \.(webp|jpg|png|ico|mp3|woff2|otf|ttf)$ {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:3003;
         proxy_set_header Host $host;
         add_header Cache-Control "public, max-age=2592000";
     }
 
     location / {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:3003;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -117,6 +117,6 @@ pm2 restart wedding
 | Triệu chứng | Nguyên nhân / cách xử lý |
 |---|---|
 | `pm2 status` báo `errored` | `pm2 logs wedding` xem lỗi; thường do chưa `npm run build` hoặc Node < 20.9 (`node -v`) |
-| Trang trắng, 502 | Nginx không nối được port 3000 → kiểm tra `pm2 status`, rồi `sudo nginx -t` |
+| Trang trắng, 502 | Nginx không nối được port 3003 → kiểm tra `pm2 status`, rồi `sudo nginx -t` |
 | Đổi code mà web không đổi | Quên `npm run build` trước khi `pm2 restart` |
 | Hết SSL sau 90 ngày | Certbot tự gia hạn; kiểm tra `sudo certbot renew --dry-run` |

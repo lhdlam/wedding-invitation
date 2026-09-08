@@ -7,7 +7,7 @@ module.exports = {
     {
       name: "wedding",
       script: "node_modules/next/dist/bin/next",
-      args: "start -p 3000",
+      args: "start -p 3003",
       instances: 1,
       autorestart: true,
       max_memory_restart: "400M",
