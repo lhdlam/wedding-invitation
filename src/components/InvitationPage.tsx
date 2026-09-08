@@ -17,9 +17,6 @@ import { ThankYouSection } from "@/components/ThankYouSection";
 import { TimelineSection } from "@/components/TimelineSection";
 import type { InvitationContent } from "@/types/invitation";
 
-/** Placeholder guest name — a dotted blank until a guest token is provided. */
-const GUEST_NAME = "...";
-
 interface InvitationPageProps {
   /** Which of the two receptions this page invites to. */
   content: InvitationContent;
@@ -104,7 +101,6 @@ export function InvitationPage({ content }: InvitationPageProps) {
           date={content.date}
         />
         <InvitationSection
-          guestName={GUEST_NAME}
           receptionTime={content.receptionTime}
           dateLabel={content.dateLabel}
           date={content.date}
@@ -127,7 +123,6 @@ export function InvitationPage({ content }: InvitationPageProps) {
 
       {!coverSkipped && (
         <CoverOverlay
-          guestName={GUEST_NAME}
           dateShort={content.dateLabel.replace(".2026", ".26")}
           side={content.side}
           onOpen={handleOpen}

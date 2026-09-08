@@ -56,12 +56,64 @@ pm2 stop wedding      # dừng
 
 ## 4. Nginx reverse proxy + domain
 
-Tạo file `/etc/nginx/sites-available/wedding`:
+> DNS cần cả 2 bản ghi trỏ về IP VPS: `@` (domain gốc) và `www`.
+
+**Bước A** — tạo file `/etc/nginx/sites-available/wedding` (bản HTTP tạm để
+certbot xác thực):
 
 ```nginx
 server {
     listen 80;
     server_name danglam-hoaithuong.vn www.danglam-hoaithuong.vn;  # đổi thành domain của bạn
+
+    location / {
+        proxy_pass http://127.0.0.1:3003;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+Kích hoạt + xin SSL miễn phí (Let's Encrypt) cho **cả 2 tên**:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/wedding /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d danglam-hoaithuong.vn -d www.danglam-hoaithuong.vn
+```
+
+**Bước B** — sau khi certbot cấp chứng chỉ xong, thay TOÀN BỘ nội dung file
+`/etc/nginx/sites-available/wedding` bằng bản chuẩn cuối: mọi truy cập
+`http://` và `www.` đều bị dồn về một địa chỉ duy nhất
+`https://danglam-hoaithuong.vn`:
+
+```nginx
+# 1) HTTP (mọi tên) → HTTPS domain gốc
+server {
+    listen 80;
+    server_name danglam-hoaithuong.vn www.danglam-hoaithuong.vn;
+    return 301 https://danglam-hoaithuong.vn$request_uri;
+}
+
+# 2) HTTPS www → HTTPS domain gốc
+server {
+    listen 443 ssl http2;
+    server_name www.danglam-hoaithuong.vn;
+
+    ssl_certificate     /etc/letsencrypt/live/danglam-hoaithuong.vn/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/danglam-hoaithuong.vn/privkey.pem;
+
+    return 301 https://danglam-hoaithuong.vn$request_uri;
+}
+
+# 3) Site chính
+server {
+    listen 443 ssl http2;
+    server_name danglam-hoaithuong.vn;
+
+    ssl_certificate     /etc/letsencrypt/live/danglam-hoaithuong.vn/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/danglam-hoaithuong.vn/privkey.pem;
 
     # Ảnh/nhạc/tĩnh: cache 30 ngày ở trình duyệt
     location ~* \.(webp|jpg|png|ico|mp3|woff2|otf|ttf)$ {
@@ -81,17 +133,19 @@ server {
 }
 ```
 
-Kích hoạt + SSL miễn phí (Let's Encrypt):
-
 ```bash
-sudo ln -s /etc/nginx/sites-available/wedding /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
-
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d danglam-hoaithuong.vn -d www.danglam-hoaithuong.vn
 ```
 
-Xong — mở `https://domain` là thấy thiệp; trang nhà gái ở `https://domain/nha-gai`.
+Kiểm tra chuyển hướng (cả 3 phải trả `301` về `https://danglam-hoaithuong.vn/...`):
+
+```bash
+curl -sI http://danglam-hoaithuong.vn      | head -3
+curl -sI http://www.danglam-hoaithuong.vn  | head -3
+curl -sI https://www.danglam-hoaithuong.vn | head -3
+```
+
+Xong — mở `https://domain` là thấy thiệp; trang nhà gái ở `https://domain/T`.
 
 ## 5. Cập nhật phiên bản mới (mỗi lần sửa)
 
@@ -105,7 +159,7 @@ pm2 restart wedding
 
 ## 6. Checklist sau deploy (mở bằng điện thoại thật)
 
-- [ ] `/` và `/nha-gai` — đúng ngày, tên, nhà hàng từng bên
+- [ ] `/` và `/T` — đúng ngày, tên, nhà hàng từng bên
 - [ ] Bấm sáp mở phong bì: animation + nhạc phát
 - [ ] Nút "Chỉ đường tới nhà hàng" ra đúng Google Maps
 - [ ] Vuốt lightbox album

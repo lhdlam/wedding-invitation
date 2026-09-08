@@ -127,8 +127,6 @@ const COVER_STYLES = `
 `;
 
 export interface CoverOverlayProps {
-  /** Name rendered on the envelope pocket. Default placeholder: "...". */
-  guestName: string;
   /** Short date on the sliding card, e.g. "19.09.26". */
   dateShort: string;
   /** Hosting side — decides whose name is read first on the card. */
@@ -143,7 +141,7 @@ export interface CoverOverlayProps {
  * the "Save our date" card slides out, and the whole scene dissolves into
  * the invitation.
  */
-export function CoverOverlay({ guestName, dateShort, side, onOpen }: CoverOverlayProps) {
+export function CoverOverlay({ dateShort, side, onOpen }: CoverOverlayProps) {
   const [first, second] = coupleFor(side);
   const [opening, setOpening] = useState(false);
   const [flapBehind, setFlapBehind] = useState(false);
@@ -253,14 +251,18 @@ export function CoverOverlay({ guestName, dateShort, side, onOpen }: CoverOverla
                   envelopeGone && "opacity-0",
                 )}
               >
-                <div className="absolute inset-x-0 bottom-[14px] text-center">
-                  <p className="font-lora text-[12px] uppercase tracking-[3px] text-foreground/70">
-                    Thân mời:
+                {/* Cover lockup — mirrors the printed envelope front */}
+                <div className="absolute inset-x-0 bottom-[16px] text-center">
+                  <p className="font-silenter text-[30px] leading-none text-wine">
+                    Save our date
                   </p>
-                  <p className="font-anisa italic text-[32px] leading-[26px] text-wine mt-2">
-                    {guestName}
-                  </p>
-                  <p className="mx-auto mt-2 w-[150px] border-t border-foreground/40" />
+                  <div className="mt-2 flex items-center justify-center gap-3">
+                    <span className="h-px w-8 bg-gold/50" aria-hidden="true" />
+                    <p className="font-lora text-[14px] tracking-[4px] text-foreground/80">
+                      {dateShort}
+                    </p>
+                    <span className="h-px w-8 bg-gold/50" aria-hidden="true" />
+                  </div>
                 </div>
               </div>
 

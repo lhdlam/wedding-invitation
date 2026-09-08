@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Reveal } from "@/components/Reveal";
 import { cn } from "@/lib/utils";
 import type { Venue, WeddingDate } from "@/types/invitation";
 
 interface InvitationSectionProps {
-  /** Guest name placeholder rendered in the script face. */
-  guestName?: string;
   /** Rendered inside the reception lines, e.g. "11:00, Thứ Bảy". */
   receptionTime: string;
   /** Compact reception date, e.g. "19.09.2026". */
@@ -24,7 +22,6 @@ interface InvitationSectionProps {
  * below inside the same card.
  */
 export function InvitationSection({
-  guestName = "...",
   receptionTime,
   dateLabel,
   date,
@@ -48,7 +45,7 @@ export function InvitationSection({
   return (
     <section
       className={cn(
-        "mobilel:px-6 mobilel:py-12 relative px-4 py-10",
+        "mobilel:px-6 mobilel:pb-12 relative px-4 pt-3 pb-10",
         className,
       )}
     >
@@ -56,28 +53,8 @@ export function InvitationSection({
         <div className="flex">
           {/* Left — invitation copy */}
           <div className="flex-1 px-5 mobilem:px-6 py-10 text-left">
-            <p className="font-lora text-[15px] text-foreground/85">
-              Trân trọng kính mời
-            </p>
-            <div className="mt-3 max-w-[210px]">
-              <Reveal
-                as="p"
-                from="down"
-                distance={20}
-                once={false}
-                className="font-anisa italic text-[40px] text-wine leading-[30px] mb-2"
-              >
-                {guestName}
-              </Reveal>
-              <ScaleXRule />
-            </div>
-
-            <p className="font-lora text-[14px] mobilel:text-[15px] text-foreground/85 mt-6 leading-relaxed">
-              đến dự buổi tiệc chung vui cùng gia đình chúng tôi
-            </p>
-
-            <p className="font-lora text-[14px] text-foreground/85 mt-5">
-              Tại nhà hàng tiệc cưới
+            <p className="font-lora text-[15px] text-foreground/85 leading-relaxed">
+              Địa điểm tổ chức tiệc cưới
             </p>
             <a
               href={venue.mapLink}
@@ -188,41 +165,5 @@ export function InvitationSection({
         </div>
       </div>
     </section>
-  );
-}
-
-/**
- * The rule beneath the guest name. It draws itself outward from the centre
- * (`scaleX(0)` → `scaleX(1)`), which `Reveal` cannot express, so it carries
- * its own observer.
- */
-function ScaleXRule() {
-  const ref = useRef<HTMLParagraphElement | null>(null);
-  const [shown, setShown] = useState(false);
-
-  useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-
-    /* Re-triggers: collapses back to scaleX(0) out of view, redraws on re-entry. */
-    const observer = new IntersectionObserver(
-      ([entry]) => setShown(entry.isIntersecting),
-      { threshold: 0.15, rootMargin: "0px 0px -40px 0px" },
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <p
-      ref={ref}
-      className={cn(
-        "border-t border-foreground/50 w-full will-change-transform",
-        "origin-center transition-transform duration-700 delay-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
-        "motion-reduce:transition-none motion-reduce:scale-x-100",
-        shown ? "scale-x-100" : "scale-x-0",
-      )}
-    />
   );
 }

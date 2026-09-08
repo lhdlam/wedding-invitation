@@ -34,7 +34,7 @@ export function FamiliesSection({
   return (
     <div
       className={cn(
-        "relative px-4 py-10 mobilem:px-5 mobilel:px-6 mobilel:py-12",
+        "relative px-4 pt-10 pb-3 mobilem:px-5 mobilel:px-6 mobilel:pt-12",
         className,
       )}
     >
@@ -47,7 +47,7 @@ export function FamiliesSection({
         <p className="font-lora text-[14px] mobilel:text-[15px] text-foreground/85 uppercase tracking-[2px] mt-10 leading-relaxed">
           Trân trọng báo tin
           <br />
-          Lễ Thành Hôn của con chúng tôi
+          {side === "gai" ? "Lễ Vu Quy" : "Lễ Thành Hôn"}
         </p>
 
         <div className="mt-8">

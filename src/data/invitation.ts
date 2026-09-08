@@ -2,7 +2,7 @@
  * Single source of truth for every piece of invitation copy.
  *
  * The wedding runs over two days, so the site ships two variants: `/` carries
- * the groom's family's reception (19.09.2026) and `/nha-gai` the bride's
+ * the groom's family's reception (19.09.2026) and `/T` the bride's
  * family's (18.09.2026). Everything except the ceremony, the reception and the
  * venue is shared between them.
  */
